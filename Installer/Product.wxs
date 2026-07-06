@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+		   Name="WinNotifyBridge"
+		   Language="1033"
+		   Version="1.0.0.0"
+		   Manufacturer="WinNotifyBridge"
+		   UpgradeCode="B7DCE5DF-34E8-4524-8A0E-E44C61AC1733">
+	<Package InstallerVersion="500"
+			 Compressed="yes"
+			 InstallScope="perMachine"
+			 Description="WinNotifyBridge service, tray controller, and listener" />
+
+	<MajorUpgrade DowngradeErrorMessage="A newer version of WinNotifyBridge is already installed." />
+	<MediaTemplate EmbedCab="yes" />
+
+	<Feature Id="MainFeature" Title="WinNotifyBridge" Level="1">
+	  <ComponentGroupRef Id="ServiceFiles" />
+	  <ComponentGroupRef Id="TrayFiles" />
+	  <ComponentGroupRef Id="ListenerFiles" />
+	</Feature>
+
+	<Directory Id="TARGETDIR" Name="SourceDir">
+	  <Directory Id="ProgramFilesFolder">
+		<Directory Id="INSTALLFOLDER" Name="WinNotifyBridge">
+		  <Directory Id="SERVICEFOLDER" Name="Service" />
+		  <Directory Id="TRAYFOLDER" Name="Tray" />
+		  <Directory Id="LISTENERFOLDER" Name="Listener" />
+		</Directory>
+	  </Directory>
+	</Directory>
+  </Product>
+
+  <Fragment>
+	<DirectoryRef Id="SERVICEFOLDER">
+	  <Component Id="cmpServiceExe" Guid="F043F827-E1F1-45E8-8FA9-6D44D9318B44">
+		<File Id="filServiceExe" KeyPath="yes" Source="$(var.ServiceBinDir)\WinNotifyBridge.exe" />
+		<ServiceInstall Id="svcInstallWinNotifyBridge"
+						Name="Service1"
+						DisplayName="WinNotifyBridge"
+						Description="Forwards Windows notifications to Telegram."
+						Type="ownProcess"
+						Start="auto"
+						ErrorControl="normal"
+						Account="LocalSystem"
+						Vital="yes" />
+		<ServiceControl Id="svcControlWinNotifyBridge"
+						Name="Service1"
+						Start="install"
+						Stop="both"
+						Remove="uninstall"
+						Wait="yes" />
+	  </Component>
+	  <Component Id="cmpServiceConfig" Guid="16E2D16A-BDCF-4BA8-B0CC-EB5098C11813">
+		<File Id="filServiceConfig" KeyPath="yes" Source="$(var.ServiceBinDir)\WinNotifyBridge.exe.config" />
+	  </Component>
+	</DirectoryRef>
+
+	<DirectoryRef Id="TRAYFOLDER">
+	  <Component Id="cmpTrayExe" Guid="478EBAA6-E352-4B83-8635-5EB3713B89EE">
+		<File Id="filTrayExe" KeyPath="yes" Source="$(var.TrayBinDir)\WinNotifyBridge.Tray.exe" />
+	  </Component>
+	  <Component Id="cmpTrayAutoStart" Guid="6D4AFAB2-F4DF-4A20-95AB-7F705E1274E5">
+		<RegistryValue Root="HKLM"
+					   Key="Software\Microsoft\Windows\CurrentVersion\Run"
+					   Name="WinNotifyBridge.Tray"
+					   Type="string"
+					   Value="&quot;[TRAYFOLDER]WinNotifyBridge.Tray.exe&quot;"
+					   KeyPath="yes" />
+	  </Component>
+	</DirectoryRef>
+
+	<DirectoryRef Id="LISTENERFOLDER">
+	  <Component Id="cmpListenerExe" Guid="7B5B5E20-9A91-4D0A-8183-FB3E4D4AFB69">
+		<File Id="filListenerExe" KeyPath="yes" Source="$(var.ListenerBinDir)\WinNotifyBridge.Listener.exe" />
+	  </Component>
+	  <Component Id="cmpListenerConfig" Guid="41A726A7-8F89-4CA9-B978-A0FF6BC05320">
+		<File Id="filListenerConfig" KeyPath="yes" Source="$(var.ListenerBinDir)\WinNotifyBridge.Listener.exe.config" />
+	  </Component>
+	</DirectoryRef>
+
+  </Fragment>
+
+  <Fragment>
+	<ComponentGroup Id="ServiceFiles">
+	  <ComponentRef Id="cmpServiceExe" />
+	  <ComponentRef Id="cmpServiceConfig" />
+	</ComponentGroup>
+
+	<ComponentGroup Id="TrayFiles">
+	  <ComponentRef Id="cmpTrayExe" />
+	  <ComponentRef Id="cmpTrayAutoStart" />
+	</ComponentGroup>
+
+	<ComponentGroup Id="ListenerFiles">
+	  <ComponentRef Id="cmpListenerExe" />
+	  <ComponentRef Id="cmpListenerConfig" />
+	</ComponentGroup>
+  </Fragment>
+</Wix>
