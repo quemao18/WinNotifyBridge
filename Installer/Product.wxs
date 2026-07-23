@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*"
-		   Name="WinNotifyBridge"
-		   Language="1033"
-		   Version="1.0.0.0"
-		   Manufacturer="WinNotifyBridge"
-		   UpgradeCode="B7DCE5DF-34E8-4524-8A0E-E44C61AC1733">
+	<Product Id="*"
+			 Name="WinNotifyBridge"
+			 Language="1033"
+			 Version="1.1.0.0"
+			 Manufacturer="WinNotifyBridge"
+			 UpgradeCode="B7DCE5DF-34E8-4524-8A0E-E44C61AC1733">
 	<Package InstallerVersion="500"
 			 Compressed="yes"
 			 InstallScope="perMachine"
@@ -13,6 +13,10 @@
 
 	<MajorUpgrade DowngradeErrorMessage="A newer version of WinNotifyBridge is already installed." />
 	<MediaTemplate EmbedCab="yes" />
+	<UIRef Id="WixUI_Minimal" />
+	<Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch WinNotifyBridge Tray (Administrator)" />
+	<CustomAction Id="SetLaunchTrayTarget" Property="WixShellExecTarget" Value="[TRAYFOLDER]LaunchTrayElevated.cmd" />
+	<CustomAction Id="LaunchTrayAfterInstall" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" Return="ignore" />
 
 	<Feature Id="MainFeature" Title="WinNotifyBridge" Level="1">
 	  <ComponentGroupRef Id="ServiceFiles" />
@@ -29,6 +33,15 @@
 		</Directory>
 	  </Directory>
 	</Directory>
+  <UI>
+    <Publish Dialog="ExitDialog"
+         Control="Finish"
+         Event="DoAction"
+         Value="LaunchTrayAfterInstall">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed</Publish>
+  </UI>
+  <InstallUISequence>
+    <Custom Action="SetLaunchTrayTarget" After="CostFinalize">NOT Installed</Custom>
+  </InstallUISequence>
   </Product>
 
   <Fragment>
@@ -57,10 +70,11 @@
 	</DirectoryRef>
 
 	<DirectoryRef Id="TRAYFOLDER">
-	  <Component Id="cmpTrayExe" Guid="478EBAA6-E352-4B83-8635-5EB3713B89EE">
+		<Component Id="cmpTrayExe" Guid="478EBAA6-E352-4B83-8635-5EB3713B89EE">
 		<File Id="filTrayExe" KeyPath="yes" Source="$(var.TrayBinDir)\WinNotifyBridge.Tray.exe" />
-	  </Component>
-	  <Component Id="cmpTrayAutoStart" Guid="6D4AFAB2-F4DF-4A20-95AB-7F705E1274E5">
+		<File Id="filTrayLaunchHelper" Source="$(var.TrayBinDir)\LaunchTrayElevated.cmd" />
+		</Component>
+		<Component Id="cmpTrayAutoStart" Guid="6D4AFAB2-F4DF-4A20-95AB-7F705E1274E5">
 		<RegistryValue Root="HKLM"
 					   Key="Software\Microsoft\Windows\CurrentVersion\Run"
 					   Name="WinNotifyBridge.Tray"

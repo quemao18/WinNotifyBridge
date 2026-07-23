@@ -21,8 +21,8 @@ The MSI installer is intended to install and configure all required parts:
 
 Download the latest MSI from the repository **Releases** page.
 
-- **Latest stable release**: v1.0.0
-- **Installer**: `WinNotifyBridge-v1.0.0.msi`
+- **Latest stable release**: v1.1.0
+- **Installer**: `WinNotifyBridge-v1.1.0.msi`
 
 ## Installation
 
@@ -33,7 +33,7 @@ Download the latest MSI from the repository **Releases** page.
 5. Open **Settings** from the tray icon and configure:
    - Telegram Bot Token
    - Telegram Chat ID
-   - Optional URL prefix and app filter settings
+   - Optional URL prefix, app filter, and keep-awake settings
 
 ## First-time setup
 
@@ -92,6 +92,15 @@ If Teams is using the PWA/browser notification path, it should still appear in t
 Make sure the installer added the tray startup entry or scheduled task correctly.
 
 ## Release history
+
+### v1.1.0
+
+Feature and installer update release.
+
+- Keep-awake option in Settings for better away-mode reliability
+- Generic diagnostics monitor with Event Viewer and WPN Database views
+- Tray icon and local listener-path improvements
+- MSI installer launches the tray after installation
 
 ### v1.0.0
 

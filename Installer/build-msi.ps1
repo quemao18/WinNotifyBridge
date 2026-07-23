@@ -1,7 +1,7 @@
 param(
 	[string]$Configuration = "Release",
 	[string]$Platform = "Any CPU",
-	[string]$OutputName = "WinNotifyBridge.msi",
+	[string]$OutputName = "WinNotifyBridge-v1.1.0.msi",
 	[string]$WixBinPath = ""
 )
 
@@ -207,6 +207,8 @@ if ($LASTEXITCODE -ne 0)
 
 Write-Host "Linking MSI..."
 $lightArgs = @(
+	"-ext", "WixUIExtension",
+	"-ext", "WixUtilExtension",
 	"-out", $msiPath,
 	$wixObjPath
 )

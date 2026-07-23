@@ -18,12 +18,14 @@ namespace WinNotifyBridge.Tray.ViewModels
         private const string BridgePrefixVariableName = "WNB_BRIDGE_PREFIX";
         private const string EnableEventLogWatcherVariableName = "WNB_ENABLE_EVENTLOG_WATCHER";
         private const string AllowedAppsVariableName = "WNB_ALLOWED_APPS";
+        private const string KeepSystemAwakeVariableName = "WNB_KEEP_SYSTEM_AWAKE";
 
         private string _botToken;
         private string _chatId;
         private string _bridgePrefix;
         private string _allowedApps;
         private bool _enableEventLogWatcher;
+        private bool _keepSystemAwake;
 
         public SettingsViewModel()
         {
@@ -74,6 +76,12 @@ namespace WinNotifyBridge.Tray.ViewModels
             set => SetField(ref _enableEventLogWatcher, value);
         }
 
+        public bool KeepSystemAwake
+        {
+            get => _keepSystemAwake;
+            set => SetField(ref _keepSystemAwake, value);
+        }
+
         private void LoadCurrentValues()
         {
             BotToken = ReadMachineVariable(BotTokenVariableName);
@@ -86,6 +94,9 @@ namespace WinNotifyBridge.Tray.ViewModels
             var watcherValue = ReadMachineVariable(EnableEventLogWatcherVariableName);
             EnableEventLogWatcher = string.IsNullOrWhiteSpace(watcherValue) ||
                                     (bool.TryParse(watcherValue, out var enabled) && enabled);
+
+            var keepAwakeValue = ReadMachineVariable(KeepSystemAwakeVariableName);
+            KeepSystemAwake = bool.TryParse(keepAwakeValue, out var keepAwake) && keepAwake;
         }
 
         private void SaveSettings(bool restartService)
@@ -97,6 +108,7 @@ namespace WinNotifyBridge.Tray.ViewModels
                 WriteMachineVariable(BridgePrefixVariableName, BridgePrefix);
                 WriteMachineVariable(AllowedAppsVariableName, AllowedApps);
                 WriteMachineVariable(EnableEventLogWatcherVariableName, EnableEventLogWatcher ? "true" : "false");
+                WriteMachineVariable(KeepSystemAwakeVariableName, KeepSystemAwake ? "true" : "false");
 
                 if (restartService)
                 {

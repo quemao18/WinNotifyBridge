@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -21,6 +22,7 @@ namespace WinNotifyBridge
         private const string BridgePrefixVariableName = "WNB_BRIDGE_PREFIX";
         private const string EnableEventLogWatcherVariableName = "WNB_ENABLE_EVENTLOG_WATCHER";
         private const string AllowedAppsVariableName = "WNB_ALLOWED_APPS";
+        private const string KeepSystemAwakeVariableName = "WNB_KEEP_SYSTEM_AWAKE";
         private const string NotificationsLogName = "Microsoft-Windows-PushNotification-Platform/Operational";
         private const string DefaultBridgePrefix = "http://127.0.0.1:45877/notify/";
 
@@ -35,6 +37,7 @@ namespace WinNotifyBridge
         private readonly string _chatId;
         private readonly string _bridgePrefix;
         private readonly bool _enableEventLogWatcher;
+        private readonly bool _keepSystemAwake;
         private readonly HashSet<string> _allowedApps;
 
         private EventLogWatcher _notificationsWatcher;
@@ -49,6 +52,7 @@ namespace WinNotifyBridge
             _chatId = Environment.GetEnvironmentVariable(ChatIdVariableName, EnvironmentVariableTarget.Machine);
             _bridgePrefix = ResolveBridgePrefix();
             _enableEventLogWatcher = ResolveEnableEventLogWatcher();
+            _keepSystemAwake = ResolveKeepSystemAwake();
             _allowedApps = ResolveAllowedApps();
         }
 
@@ -84,6 +88,18 @@ namespace WinNotifyBridge
                 }
             }
 
+            if (_keepSystemAwake)
+            {
+                try
+                {
+                    ApplyKeepAwakeRequest();
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex, "Error enabling keep-awake mode.");
+                }
+            }
+
             ObserveTask(
                 SendToTelegramAsync($"{Environment.MachineName}: WinNotifyBridge started at {DateTime.Now:yyyy-MM-dd HH:mm:ss}"),
                 "Error sending start notification.");
@@ -93,6 +109,18 @@ namespace WinNotifyBridge
         {
             StopBridgeListener();
             StopNotificationsWatcher();
+
+            if (_keepSystemAwake)
+            {
+                try
+                {
+                    ClearKeepAwakeRequest();
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex, "Error clearing keep-awake mode.");
+                }
+            }
 
             try
             {
@@ -309,6 +337,12 @@ namespace WinNotifyBridge
                 return false;
             }
 
+            return bool.TryParse(configuredValue, out var enabled) && enabled;
+        }
+
+        private bool ResolveKeepSystemAwake()
+        {
+            var configuredValue = Environment.GetEnvironmentVariable(KeepSystemAwakeVariableName, EnvironmentVariableTarget.Machine);
             return bool.TryParse(configuredValue, out var enabled) && enabled;
         }
 
@@ -824,9 +858,41 @@ namespace WinNotifyBridge
                 TaskContinuationOptions.OnlyOnFaulted);
         }
 
+        private void ApplyKeepAwakeRequest()
+        {
+            var result = SetThreadExecutionState(
+                ExecutionState.Continuous |
+                ExecutionState.SystemRequired |
+                ExecutionState.AwayModeRequired);
+            if (result == 0)
+            {
+                throw new InvalidOperationException("Windows rejected the keep-awake request.");
+            }
+        }
+
+        private void ClearKeepAwakeRequest()
+        {
+            var result = SetThreadExecutionState(ExecutionState.Continuous);
+            if (result == 0)
+            {
+                throw new InvalidOperationException("Windows rejected the keep-awake reset request.");
+            }
+        }
+
         private void LogError(Exception exception, string context)
         {
             EventLog.WriteEntry($"{context} {exception.Message}", EventLogEntryType.Error);
         }
+
+        [Flags]
+        private enum ExecutionState : uint
+        {
+            SystemRequired = 0x00000001,
+            AwayModeRequired = 0x00000040,
+            Continuous = 0x80000000
+        }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern ExecutionState SetThreadExecutionState(ExecutionState executionState);
     }
 }

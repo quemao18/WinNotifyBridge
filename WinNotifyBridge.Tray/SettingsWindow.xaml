@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="WinNotifyBridge Settings"
-        Height="460"
+        Height="500"
         Width="620"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
@@ -38,16 +38,19 @@
                  TextWrapping="Wrap"
                  Text="{Binding AllowedApps, UpdateSourceTrigger=PropertyChanged}" />
 
-        <CheckBox Grid.Row="4" Grid.Column="1"
-                  Margin="0,10,0,0"
-                  Content="Enable Windows Event Log watcher"
-                  IsChecked="{Binding EnableEventLogWatcher}" />
+        <StackPanel Grid.Row="4" Grid.Column="1" Margin="0,10,0,0">
+            <CheckBox Content="Enable Windows Event Log watcher"
+                      IsChecked="{Binding EnableEventLogWatcher}" />
+            <CheckBox Margin="0,8,0,0"
+                      Content="Keep the PC awake while WinNotifyBridge is running"
+                      IsChecked="{Binding KeepSystemAwake}" />
+        </StackPanel>
 
         <TextBlock Grid.Row="5" Grid.Column="1"
                    Margin="0,8,0,0"
                    TextWrapping="Wrap"
                    Foreground="DimGray"
-                   Text="Allowed apps accepts names separated by comma, semicolon, or new lines (e.g. Teams, Outlook, Windows Security). Empty means allow all apps." />
+                   Text="Allowed apps accepts names separated by comma, semicolon, or new lines (e.g. Teams, Outlook, Windows Security). Empty means allow all apps. Enable the keep-awake option if you want the service to reduce missed notifications while you are away but still signed in." />
 
         <StackPanel Grid.Row="6" Grid.Column="1"
                     Margin="0,14,0,0"
